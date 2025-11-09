@@ -55,11 +55,13 @@ export const registerUserThunk = createAsyncThunk(
     )
 );
 
-export const logoutUserThunk = createAsyncThunk('users/logoutUser', async () =>
-  logoutApi().then(() => {
+export const logoutUserThunk = createAsyncThunk(
+  'users/logoutUser',
+  async () => {
+    await logoutApi();
     deleteCookie('accessToken');
     localStorage.removeItem('refreshToken');
-  })
+  }
 );
 
 export const getUserThunk = createAsyncThunk('users/getUser', getUserApi);
@@ -121,10 +123,15 @@ const userSlice = createSlice({
         state.loginUserRequest = false;
         state.isAuthenticated = true;
       })
-      .addCase(logoutUserThunk.pending, (state) => {
+      .addCase(logoutUserThunk.pending, (state) => {})
+      .addCase(logoutUserThunk.rejected, (state, action) => {
+        state.error = action.error.message || 'Ошибка при выходе';
+      })
+      .addCase(logoutUserThunk.fulfilled, (state) => {
         state.user = null;
-        state.loginUserRequest = false;
         state.isAuthenticated = false;
+        state.loginUserRequest = false;
+        state.error = null;
       })
       .addCase(getUserThunk.pending, (state) => {
         state.loginUserRequest = true;
